@@ -18,11 +18,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            CS501GA2Theme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    ParentComposable(modifier = Modifier.padding(innerPadding))
-                }
-            }
+            ParentComposable()
         }
     }
 }
@@ -30,21 +26,36 @@ class MainActivity : ComponentActivity() {
 // Stateful Parent Composable
 @Composable
 fun ParentComposable(modifier: Modifier = Modifier) {
-    var message by remember { mutableStateOf("Button not clicked yet") }
+    // two state booleans
+    var isDarkMode by remember { mutableStateOf(false) }
+    var wasClicked by remember { mutableStateOf(false) }
 
-    ChildComposable(
-        text = message,
-        onButtonClick = {
-            message = "Button was clicked!"
-        },
-        modifier = modifier
-    )
+    val message = if (wasClicked) "Button was clicked!" else "Button not clicked yet"
+    val buttonText = if (isDarkMode) "Switch to Light Mode" else "Switch to Dark Mode"
+
+    // we change the theme on button presses too!!!
+    CS501GA2Theme(darkTheme = isDarkMode) {
+        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            ChildComposable(
+                text = message,
+                buttonText = buttonText,
+                // callback
+                onButtonClick = {
+                    isDarkMode = !isDarkMode
+                    wasClicked = true
+                },
+                modifier = modifier.padding(innerPadding)
+            )
+        }
+    }
 }
 
 //  Stateless Child Composable
 @Composable
 fun ChildComposable(
+    // receives state parameters text and buttonText
     text: String,
+    buttonText: String,
     onButtonClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -54,8 +65,9 @@ fun ChildComposable(
     ) {
         Text(text = text)
         Spacer(modifier = Modifier.height(16.dp))
+        // child composable does not know what happens when it calls onButtonClick
         Button(onClick = onButtonClick) {
-            Text("Click Me")
+            Text(buttonText)
         }
     }
 }
@@ -63,11 +75,6 @@ fun ChildComposable(
 // Preview
 @Preview(showBackground = true)
 @Composable
-fun PreviewChild() {
-    CS501GA2Theme {
-        ChildComposable(
-            text = "Preview Text",
-            onButtonClick = {}
-        )
-    }
+fun PreviewParent() {
+    ParentComposable()
 }
